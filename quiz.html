@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>超准人格测试</title>
+  <!-- 引入Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入Font Awesome -->
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  
+  <!-- 配置Tailwind颜色和字体 -->
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#8B5CF6', // 紫色作为主色调，显得神秘又有趣
+            secondary: '#EC4899', // 粉色作为辅助色
+            accent: '#F59E0B', // 橙色作为强调色
+          },
+          fontFamily: {
+            fun: ['Comic Sans MS', 'cursive', 'sans-serif'],
+          },
+        },
+      }
+    }
+  </script>
+  
+  <!-- 自定义工具类 -->
+  <style type="text/tailwindcss">
+    @layer utilities {
+      .content-auto {
+        content-visibility: auto;
+      }
+      .question-appear {
+        animation: fadeIn 0.5s ease-out;
+      }
+      .result-appear {
+        animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      .suspense-appear {
+        animation: pulse 1.5s infinite;
+      }
+      .image-float {
+        animation: float 3s ease-in-out infinite;
+      }
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes popIn {
+      0% { opacity: 0; transform: scale(0.8); }
+      70% { opacity: 1; transform: scale(1.05); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes float {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-pink-50 min-h-screen font-fun text-gray-800">
+  <div class="container mx-auto px-4 py-8 max-w-2xl">
+    <!-- 头部 -->
+    <header class="text-center mb-8">
+      <h1 class="text-[clamp(2rem,5vw,3rem)] font-bold text-primary mb-2">超准人格测试</h1>
+      <p class="text-gray-600 text-lg">只需回答几个简单问题，揭示真实的你！</p>
+    </header>
+    
+    <!-- 开始页面 -->
+    <div id="start-screen" class="text-center py-12 bg-white rounded-2xl shadow-lg p-8">
+      <div class="mb-8 text-6xl text-primary">
+        <i class="fa fa-star"></i>
+        <i class="fa fa-heart"></i>
+        <i class="fa fa-moon-o"></i>
+      </div>
+      <p class="text-xl mb-6">这个测试经过100位心理学家认证，准确率高达99.9%！</p>
+      <p class="text-gray-600 mb-8">只需几分钟，发现真实的自己</p>
+      <button id="start-btn" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+        开始测试 <i class="fa fa-arrow-right ml-2"></i>
+      </button>
+    </div>
+    
+    <!-- 问卷容器 -->
+    <div id="quiz-container" class="hidden">
+      <!-- 进度条 -->
+      <div class="mb-6 bg-gray-200 rounded-full h-2.5">
+        <div id="progress-bar" class="bg-primary h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+      </div>
+      
+      <!-- 问题容器 -->
+      <div id="question-container" class="bg-white rounded-2xl shadow-lg p-6 mb-6 min-h-[300px]">
+        <!-- 问题会通过JS动态插入 -->
+      </div>
+      
+      <!-- 导航按钮 -->
+      <div class="flex justify-between">
+        <button id="prev-btn" class="hidden bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-6 rounded-full transition-all duration-300">
+          <i class="fa fa-arrow-left mr-2"></i> 上一题
+        </button>
+        <button id="next-btn" class="bg-primary hover:bg-primary/90 text-white font-bold py-2 px-6 rounded-full transition-all duration-300 transform hover:scale-105">
+          下一题 <i class="fa fa-arrow-right ml-2"></i>
+        </button>
+        <button id="submit-btn" class="hidden bg-secondary hover:bg-secondary/90 text-white font-bold py-2 px-6 rounded-full transition-all duration-300 transform hover:scale-105">
+          查看结果 <i class="fa fa-check ml-2"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- 结果页面 -->
+    <div id="result-screen" class="hidden">
+      <!-- 过渡期待页面 -->
+      <div id="suspense-screen" class="bg-white rounded-2xl shadow-lg p-8 text-center py-16">
+        <div class="suspense-appear">
+          <div class="text-5xl text-primary mb-6">
+            <i class="fa fa-spinner fa-spin"></i>
+          </div>
+          <h2 class="text-2xl md:text-3xl font-bold text-gray-800 mb-4">根据你的测试结果，你是一位……</h2>
+          <p class="text-gray-500">正在分析你的性格特质...</p>
+        </div>
+      </div>
+      
+      <!-- 最终结果页面 -->
+      <div id="final-result" class="hidden bg-white rounded-2xl shadow-lg p-8">
+        <div class="text-center mb-6">
+          <h2 class="text-2xl md:text-3xl font-bold text-primary mb-2">你的测试结果</h2>
+          <div class="w-20 h-1 bg-accent mx-auto rounded-full"></div>
+        </div>
+        
+        <div id="result-content" class="result-appear">
+          <!-- 结果会通过JS动态插入 -->
+        </div>
+        
+        <div class="mt-8 text-center">
+          <button id="restart-btn" class="bg-primary hover:bg-primary/90 text-white font-bold py-3 px-8 rounded-full text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+            再测一次 <i class="fa fa-refresh ml-2"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- 页脚 -->
+    <footer class="mt-12 text-center text-gray-500 text-sm">
+      <p>本测试仅供娱乐 <i class="fa fa-smile-o"></i></p>
+    </footer>
+  </div>
+
+  <script>
+    // 问题数据
+    const questions = [
+      {
+        id: 1,
+        text: "你更喜欢用哪只手开门？",
+        options: [
+          "左手，显得与众不同",
+          "右手，遵循传统美德",
+          "两只手一起，显得有力量",
+          "用脚，解放双手"
+        ]
+      },
+      {
+        id: 2,
+        text: "当你看到地上有1块钱，你会？",
+        options: [
+          "立刻捡起，这是我的幸运",
+          "假装没看见，怕别人说我小气",
+          "踢一脚，看看它会滚到哪里",
+          "拍照发朋友圈，问是谁掉的"
+        ]
+      },
+      {
+        id: 3,
+        text: "你通常在什么时间刷手机？",
+        options: [
+          "起床后第一件事",
+          "睡前最后一件事",
+          "吃饭时，不然饭不香",
+          "随时随地，手机是我的灵魂伴侣"
+        ]
+      },
+      {
+        id: 4,
+        text: "如果蚊子叮了你，你会？",
+        options: [
+          "立刻打死它，报仇雪恨",
+          "默默忍受，众生平等",
+          "跟踪它，看看它的窝在哪里",
+          "拍照留念，这是它的最后一张照片"
+        ]
+      },
+      {
+        id: 5,
+        text: "你吃泡面时喜欢先放什么？",
+        options: [
+          "先放面饼，这是基础",
+          "先放调料，香味能提前出来",
+          "先放水，温锅敬面",
+          "直接干吃，不需要放水"
+        ]
+      },
+      {
+        id: 6,
+        text: "你最喜欢的休闲活动是？",
+        options: [
+          "看哈基米视频",
+          "吃香蕉",
+          "对着镜子自言自语",
+          "搜集可爱的东西"
+        ],
+        // 简短抽象的锐评
+        reviews: [
+          "这辈子有了。",
+          "蕉个朋♂友？",
+          "你的主治医生正在到处找你",
+          "粉色娇嫩，你如今几岁了？"
+        ],
+        // 对应的猫咪梗图
+        images: [
+          "https://imgs.qiubiaoqing.com/qiubiaoqing/imgs/68222c4fed80dyse.jpeg", // 
+          "https://tse3.mm.bing.net/th/id/OIP.IT8jtmq2xSPUSecnwlJ7TQHaE-?rs=1&pid=ImgDetMain&o=7&rm=3", // 
+          "https://pics2.baidu.com/feed/2fdda3cc7cd98d1036f848df726ec71e7aec9095.jpeg@f_auto?token=57fb980b65ed4d3326f0160595941bf8", //
+          "https://c-ssl.duitang.com/uploads/blog/202011/28/20201128165409_19e49.jpeg"  // 
+        ],
+        // 图片描述（用于alt属性）
+        imageDescriptions: [
+          " ",
+          " ",
+          " ",
+          " "
+        ]
+      }
+    ];
+    
+    // 当前问题索引
+    let currentQuestionIndex = 0;
+    // 存储用户的答案
+    const userAnswers = [];
+    
+    // DOM元素
+    const startScreen = document.getElementById('start-screen');
+    const quizContainer = document.getElementById('quiz-container');
+    const resultScreen = document.getElementById('result-screen');
+    const suspenseScreen = document.getElementById('suspense-screen');
+    const finalResult = document.getElementById('final-result');
+    const questionContainer = document.getElementById('question-container');
+    const progressBar = document.getElementById('progress-bar');
+    const startBtn = document.getElementById('start-btn');
+    const prevBtn = document.getElementById('prev-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const restartBtn = document.getElementById('restart-btn');
+    const resultContent = document.getElementById('result-content');
+    
+    // 事件监听
+    startBtn.addEventListener('click', startQuiz);
+    prevBtn.addEventListener('click', goToPrevQuestion);
+    nextBtn.addEventListener('click', goToNextQuestion);
+    submitBtn.addEventListener('click', showResult);
+    restartBtn.addEventListener('click', restartQuiz);
+    
+    // 开始测试
+    function startQuiz() {
+      startScreen.classList.add('hidden');
+      quizContainer.classList.remove('hidden');
+      showQuestion(currentQuestionIndex);
+      updateProgress();
+    }
+    
+    // 显示指定问题
+    function showQuestion(index) {
+      const question = questions[index];
+      questionContainer.innerHTML = `
+        <div class="question-appear">
+          <h3 class="text-xl md:text-2xl font-bold mb-6 text-gray-800">问题 ${question.id}/${questions.length}</h3>
+          <p class="text-lg md:text-xl mb-8 text-gray-700">${question.text}</p>
+          <div class="space-y-3">
+            ${question.options.map((option, i) => `
+              <div class="option">
+                <label class="flex items-center p-4 border border-gray-200 rounded-xl cursor-pointer hover:bg-purple-50 transition-all duration-300 ${userAnswers[index] === i ? 'bg-primary/10 border-primary' : ''}">
+                  <input type="radio" name="question-${question.id}" value="${i}" class="w-5 h-5 text-primary focus:ring-primary" ${userAnswers[index] === i ? 'checked' : ''}>
+                  <span class="ml-3">${option}</span>
+                </label>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+      
+      // 为选项添加点击事件
+      document.querySelectorAll(`input[name="question-${question.id}"]`).forEach(radio => {
+        radio.addEventListener('change', function() {
+          userAnswers[index] = parseInt(this.value);
+          // 更新选项样式
+          document.querySelectorAll('.option label').forEach((label, i) => {
+            if (i === parseInt(this.value)) {
+              label.classList.add('bg-primary/10', 'border-primary');
+            } else {
+              label.classList.remove('bg-primary/10', 'border-primary');
+            }
+          });
+          updateNavigationButtons();
+        });
+      });
+      
+      // 更新导航按钮状态
+      updateNavigationButtons();
+    }
+    
+    // 更新导航按钮状态
+    function updateNavigationButtons() {
+      // 第一题不显示上一题按钮
+      prevBtn.classList.toggle('hidden', currentQuestionIndex === 0);
+      
+      // 最后一题显示提交按钮，否则显示下一题按钮
+      if (currentQuestionIndex === questions.length - 1) {
+        nextBtn.classList.add('hidden');
+        submitBtn.classList.remove('hidden');
+      } else {
+        nextBtn.classList.remove('hidden');
+        submitBtn.classList.add('hidden');
+      }
+      
+      // 如果当前题没有答案，禁用下一步按钮
+      if (userAnswers[currentQuestionIndex] === undefined) {
+        if (currentQuestionIndex === questions.length - 1) {
+          submitBtn.disabled = true;
+          submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          submitBtn.classList.remove('hover:bg-secondary/90', 'hover:scale-105');
+        } else {
+          nextBtn.disabled = true;
+          nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+          nextBtn.classList.remove('hover:bg-primary/90', 'hover:scale-105');
+        }
+      } else {
+        if (currentQuestionIndex === questions.length - 1) {
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          submitBtn.classList.add('hover:bg-secondary/90', 'hover:scale-105');
+        } else {
+          nextBtn.disabled = false;
+          nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+          nextBtn.classList.add('hover:bg-primary/90', 'hover:scale-105');
+        }
+      }
+    }
+    
+    // 更新进度条
+    function updateProgress() {
+      const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+      progressBar.style.width = `${progress}%`;
+    }
+    
+    // 前往上一题
+    function goToPrevQuestion() {
+      if (currentQuestionIndex > 0) {
+        currentQuestionIndex--;
+        showQuestion(currentQuestionIndex);
+        updateProgress();
+      }
+    }
+    
+    // 前往下一题
+    function goToNextQuestion() {
+      if (currentQuestionIndex < questions.length - 1 && userAnswers[currentQuestionIndex] !== undefined) {
+        currentQuestionIndex++;
+        showQuestion(currentQuestionIndex);
+        updateProgress();
+      }
+    }
+    
+    // 显示结果
+    function showResult() {
+      // 先隐藏问卷容器，显示结果容器和过渡页面
+      quizContainer.classList.add('hidden');
+      resultScreen.classList.remove('hidden');
+      suspenseScreen.classList.remove('hidden');
+      finalResult.classList.add('hidden');
+      
+      // 2秒后显示最终结果，增加期待感
+      setTimeout(() => {
+        suspenseScreen.classList.add('hidden');
+        finalResult.classList.remove('hidden');
+        
+        // 结果只与最后一题相关
+        const lastQuestion = questions[questions.length - 1];
+        const lastAnswerIndex = userAnswers[userAnswers.length - 1];
+        const lastAnswerText = lastQuestion.options[lastAnswerIndex];
+        const review = lastQuestion.reviews[lastAnswerIndex];
+        const imageUrl = lastQuestion.images[lastAnswerIndex];
+        const imageDesc = lastQuestion.imageDescriptions[lastAnswerIndex];
+        
+        // 生成结果内容
+        resultContent.innerHTML = `
+          <div class="text-center mb-6">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6">……在休闲时${lastAnswerText}的人。</h3>
+            
+            <div class="my-8">
+              <img src="${imageUrl}" alt="${imageDesc}" class="w-full max-w-md mx-auto rounded-xl shadow-lg image-float object-contain" style="max-height: 300px;">
+            </div>
+            
+            <div class="bg-gray-50 p-6 rounded-xl inline-block">
+              <h4 class="text-lg font-bold text-accent mb-3">锐评：</h4>
+              <p class="text-gray-700 text-xl">${review}</p>
+            </div>
+          </div>
+          
+          <div class="text-center text-gray-500 italic mt-8">
+            <p>本测试结果经过精密计算，绝对科学可信</p>
+            <p class="mt-1">有效期：永远</p>
+          </div>
+        `;
+      }, 2000);
+    }
+    
+    // 重新开始测试
+    function restartQuiz() {
+      currentQuestionIndex = 0;
+      userAnswers.length = 0;
+      resultScreen.classList.add('hidden');
+      startScreen.classList.remove('hidden');
+      progressBar.style.width = '0%';
+    }
+  </script>
+</body>
+</html>
